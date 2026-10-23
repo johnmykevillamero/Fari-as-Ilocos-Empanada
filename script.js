@@ -4,9 +4,9 @@ let feedbacks = [];
 let isAdminLoggedIn = false;
 let adminAccount = { user: 'admin', pass: 'farinas123' };
 
-// LOAD XML MENU
+// 1. LOAD XML MENU (WITH CACHE BUSTING)
 function loadXMLMenu() {
-    fetch('products.xml?t=' + new Date().getTime())
+    fetch('products.xml?t=' + Date.now())
         .then(res => res.text())
         .then(str => (new window.DOMParser()).parseFromString(str, "text/xml"))
         .then(data => {
@@ -14,13 +14,13 @@ function loadXMLMenu() {
             products = [];
             for (let i = 0; i < items.length; i++) {
                 products.push({
-                    id: parseInt(items[i].getElementsByTagName("id")[0].textContent),
-                    category: items[i].getElementsByTagName("category")[0].textContent,
-                    name: items[i].getElementsByTagName("name")[0].textContent,
-                    price: parseFloat(items[i].getElementsByTagName("price")[0].textContent),
-                    status: items[i].getElementsByTagName("status")[0].textContent,
-                    description: items[i].getElementsByTagName("description")[0].textContent,
-                    image: items[i].getElementsByTagName("image")[0].textContent
+                    id: parseInt(items[i].getElementsByTagName("id")[0]?.textContent || 0),
+                    category: items[i].getElementsByTagName("category")[0]?.textContent || "General",
+                    name: items[i].getElementsByTagName("name")[0]?.textContent || "",
+                    price: parseFloat(items[i].getElementsByTagName("price")[0]?.textContent || 0),
+                    status: items[i].getElementsByTagName("status")[0]?.textContent || "AVAILABLE",
+                    description: items[i].getElementsByTagName("description")[0]?.textContent || "",
+                    image: items[i].getElementsByTagName("image")[0]?.textContent || ""
                 });
             }
             renderMenu();
@@ -29,9 +29,9 @@ function loadXMLMenu() {
         .catch(err => console.error("Error loading products XML:", err));
 }
 
-// LOAD XML FEEDBACKS
+// 2. LOAD XML FEEDBACKS (WITH CACHE BUSTING)
 function loadXMLFeedbacks() {
-    fetch('feedbacks.xml?t=' + new Date().getTime())
+    fetch('feedbacks.xml?t=' + Date.now())
         .then(res => res.text())
         .then(str => (new window.DOMParser()).parseFromString(str, "text/xml"))
         .then(data => {
@@ -39,10 +39,10 @@ function loadXMLFeedbacks() {
             feedbacks = [];
             for (let i = 0; i < items.length; i++) {
                 feedbacks.unshift({
-                    id: items[i].getElementsByTagName("id")[0].textContent,
-                    name: items[i].getElementsByTagName("name")[0].textContent,
-                    comment: items[i].getElementsByTagName("comment")[0].textContent,
-                    date: items[i].getElementsByTagName("date")[0].textContent
+                    id: items[i].getElementsByTagName("id")[0]?.textContent || "",
+                    name: items[i].getElementsByTagName("name")[0]?.textContent || "Anonymous",
+                    comment: items[i].getElementsByTagName("comment")[0]?.textContent || "",
+                    date: items[i].getElementsByTagName("date")[0]?.textContent || ""
                 });
             }
             renderFeedbacks();
@@ -50,7 +50,7 @@ function loadXMLFeedbacks() {
         .catch(err => console.error("Error loading feedbacks XML:", err));
 }
 
-// RENDER MENU
+// 3. RENDER MENU GRID
 function renderMenu() {
     const container = document.getElementById('menuGrid');
     if (!container) return;
@@ -63,7 +63,7 @@ function renderMenu() {
             <div class="product-card bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col justify-between" data-status="${item.status}" data-name="${item.name.toLowerCase()}">
                 <div>
                     <div class="relative h-40 overflow-hidden bg-gray-100">
-                        <img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover">
+                        <img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=500&q=80'">
                         <span class="absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded-full border ${badgeClass}">
                             ${item.status}
                         </span>
@@ -79,7 +79,7 @@ function renderMenu() {
                 </div>
                 <div class="p-3 pt-0">
                     ${!isSoldOut ? 
-                        `<button onclick="addToBag('${item.name}', ${item.price})" class="w-full brand-orange text-white py-1.5 rounded-lg text-xs font-semibold hover:opacity-90">
+                        `<button onclick="addToBag('${item.name.replace(/'/g, "\\'")}', ${item.price})" class="w-full brand-orange text-white py-1.5 rounded-lg text-xs font-semibold hover:opacity-90">
                             + Add to Bag
                         </button>` :
                         `<button disabled class="w-full bg-gray-200 text-gray-400 py-1.5 rounded-lg text-xs font-semibold cursor-not-allowed">
@@ -92,7 +92,7 @@ function renderMenu() {
     }).join('');
 }
 
-// ADMIN LOGIN LOGIC
+// 4. ADMIN LOGIN & AUTH
 function handleLogin(e) {
     e.preventDefault();
     const u = document.getElementById('username').value;
@@ -128,7 +128,7 @@ function logoutAdmin() {
     toggleAdminDrawer();
 }
 
-// ADMIN MENU EDIT
+// 5. ADMIN DRAWER EDITING
 function renderAdminPanel() {
     const list = document.getElementById('adminItemsList');
     if (!list) return;
@@ -174,7 +174,7 @@ function saveAdminChangesToXML() {
     });
 }
 
-// FEEDBACK SYSTEM
+// 6. FEEDBACK SYSTEM
 function toggleAnonymous() {
     const isAnon = document.getElementById('isAnonymous').checked;
     const nameInput = document.getElementById('feedbackName');
@@ -262,7 +262,7 @@ function deleteFeedback(id) {
     }
 }
 
-// CART & MODAL CONTROLS
+// 7. SHOPPING CART & MODALS
 function toggleBag() { document.getElementById('bagDrawer').classList.toggle('translate-x-full'); }
 function toggleLoginModal() { document.getElementById('loginModal').classList.toggle('hidden'); }
 function toggleAdminDrawer() { document.getElementById('adminDrawer').classList.toggle('translate-x-full'); }
@@ -282,7 +282,7 @@ function updateBagUI() {
     const container = document.getElementById('bagItems');
     const totalEl = document.getElementById('bagTotal');
     const countEl = document.getElementById('bag-count');
-    if (!container) return;
+    if (!container || !totalEl || !countEl) return;
 
     countEl.innerText = bag.length;
     if (bag.length === 0) {
@@ -308,6 +308,7 @@ function updateBagUI() {
     totalEl.innerText = `₱${total}`;
 }
 
+// 8. FILTERS & SEARCH
 function filterStatus(status) {
     document.querySelectorAll('.status-btn').forEach(btn => btn.classList.remove('bg-gray-800', 'text-white'));
     event.target.classList.add('bg-gray-800', 'text-white');
@@ -332,7 +333,13 @@ function filterMenu() {
     });
 }
 
+// 9. INITIAL LOAD & LIVE SYNC POLLING (Bawat 3 segundo para kay Client 2)
 window.onload = function() {
     loadXMLMenu();
     loadXMLFeedbacks();
+
+    setInterval(function() {
+        loadXMLFeedbacks();
+        loadXMLMenu();
+    }, 3000);
 };
