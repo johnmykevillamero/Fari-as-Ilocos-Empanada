@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu>
+    <!-- ILOCOS EMPANADA -->
+    <item>
+        <id>1</id>
+        <category>Ilocos Empanada</category>
+        <name>Regular Empanada</name>
+        <price>65</price>
+        <status>AVAILABLE</status>
+        <description>1 Egg, Vegetables</description>
+        <image>https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=500&amp;q=80</image>
+    </item>
+    <item>
+        <id>2</id>
+        <category>Ilocos Empanada</category>
+        <name>Special Empanada</name>
+        <price>95</price>
+        <status>AVAILABLE</status>
+        <description>1 Egg, 1 Longganisa, Vegetables</description>
+        <image>https://images.unsplash.com/photo-1541544741938-0af808871cc0?w=500&amp;q=80</image>
+    </item>
+    <item>
+        <id>3</id>
+        <category>Ilocos Empanada</category>
+        <name>Ultimate Empanada</name>
+        <price>160</price>
+        <status>AVAILABLE</status>
+        <description>1 Egg, 1 Longganisa, Bagnet, Vegetables</description>
+        <image>https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=500&amp;q=80</image>
+    </item>
+
+    <!-- EMPANADA BOX PROMO -->
+    <item>
+        <id>4</id>
+        <category>Empanada Box Promo</category>
+        <name>Box of 5 Special Empanada</name>
+        <price>430</price>
+        <status>AVAILABLE</status>
+        <description>Save ₱45 - Box of 5 Special Empanadas</description>
+        <image>https://images.unsplash.com/photo-1541544741938-0af808871cc0?w=500&amp;q=80</image>
+    </item>
+
+    <!-- ILOCOS RICE MEALS -->
+    <item>
+        <id>5</id>
+        <category>Ilocos Rice Meals</category>
+        <name>Bagnet Rice Meal</name>
+        <price>180</price>
+        <status>AVAILABLE</status>
+        <description>Crispy Bagnet served with Rice &amp; Egg</description>
+        <image>https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&amp;q=80</image>
+    </item>
+
+    <!-- EXTRAS & DRINKS -->
+    <item>
+        <id>6</id>
+        <category>Extras</category>
+        <name>Sukang Iloko Bottle</name>
+        <price>110</price>
+        <status>AVAILABLE</status>
+        <description>Signature Ilocos Vinegar Bottle</description>
+        <image>https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=500&amp;q=80</image>
+    </item>
+    <item>
+        <id>7</id>
+        <category>Drinks</category>
+        <name>Iced Tea 350ml</name>
+        <price>40</price>
+        <status>AVAILABLE</status>
+        <description>Refreshing House Blend Iced Tea</description>
+        <image>https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=500&amp;q=80</image>
+    </item>
+</menu>
