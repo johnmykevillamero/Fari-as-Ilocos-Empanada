@@ -1,14 +1,11 @@
-// Account Credentials
 let adminAccount = JSON.parse(localStorage.getItem('farinas_auth')) || { user: 'admin', pass: 'farinas123' };
 
-// Web Profile Details
 let webDetails = JSON.parse(localStorage.getItem('farinas_web_details')) || {
     title: "Fariñas Ilocos Empanada",
     sub: "San Mateo Branch",
     pfp: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=100&q=80"
 };
 
-// Full Menu Database
 const defaultProducts = [
     { id: 1, category: "Ilocos Empanada", name: "Regular Empanada", price: 65, status: "AVAILABLE", description: "1 Egg, Vegetables", image: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=500&q=80" },
     { id: 2, category: "Ilocos Empanada", name: "Special Eggless Empanada", price: 80, status: "AVAILABLE", description: "1 Longganisa, Vegetables", image: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=500&q=80" },
@@ -144,7 +141,6 @@ function resetToFullMenu() {
     }
 }
 
-// FEEDBACK LOGIC WITH ADMIN DELETE FEATURE
 function toggleAnonymous() {
     const isAnon = document.getElementById('isAnonymous').checked;
     const nameInput = document.getElementById('feedbackName');
@@ -225,7 +221,6 @@ function deleteFeedback(index) {
     }
 }
 
-// CHECKOUT & RECEIPT LOGIC
 function openCheckoutModal() {
     if (bag.length === 0) {
         alert('Your bag is empty!');
@@ -283,7 +278,6 @@ function copyReceiptText() {
     alert('Receipt copied to clipboard! You can now paste or screenshot it.');
 }
 
-// ADMIN PANEL LOGIC
 function renderAdminDrawer() {
     const list = document.getElementById('adminItemsList');
     if (!list) return;
@@ -342,210 +336,4 @@ function saveWebDetails() {
             webDetails.pfp = e.target.result;
             localStorage.setItem('farinas_web_details', JSON.stringify(webDetails));
             renderProducts();
-            showAlert('Web Profile updated successfully!');
-        };
-        reader.readAsDataURL(pfpFile.files[0]);
-    } else {
-        localStorage.setItem('farinas_web_details', JSON.stringify(webDetails));
-        renderProducts();
-        showAlert('Web details saved!');
-    }
-}
-
-function changeAccountCredentials() {
-    const u = document.getElementById('newUsername').value;
-    const p = document.getElementById('newPassword').value;
-
-    if (!u || !p) return alert('Please enter new Username and Password!');
-
-    adminAccount = { user: u, pass: p };
-    localStorage.setItem('farinas_auth', JSON.stringify(adminAccount));
-    alert('Account credentials updated successfully!');
-}
-
-function handleLogin(e) {
-    e.preventDefault();
-    const u = document.getElementById('username').value;
-    const p = document.getElementById('password').value;
-
-    if (u === adminAccount.user && p === adminAccount.pass) {
-        isAdminLoggedIn = true;
-        toggleLoginModal();
-        document.getElementById('authNav').innerHTML = `
-            <button onclick="toggleAdminDrawer()" class="brand-green text-white px-2.5 py-1.5 rounded-lg text-xs md:text-sm font-medium hover:opacity-90 transition mr-1">
-                <i class="fa-solid fa-sliders"></i> Admin Panel
-            </button>
-            <button onclick="logoutAdmin()" class="bg-red-600 text-white px-2.5 py-1.5 rounded-lg text-xs md:text-sm font-medium hover:bg-red-700 transition">
-                <i class="fa-solid fa-right-from-bracket"></i>
-            </button>
-        `;
-        showAlert('Admin logged in!');
-        renderFeedbacks(); // Re-render to show trash buttons on feedbacks
-        toggleAdminDrawer();
-    } else {
-        const err = document.getElementById('loginError');
-        err.innerText = 'Invalid Username or Password!';
-        err.classList.remove('hidden');
-    }
-}
-
-function logoutAdmin() {
-    isAdminLoggedIn = false;
-    document.getElementById('authNav').innerHTML = `
-        <button onclick="toggleLoginModal()" class="brand-orange text-white px-3 py-1.5 rounded-lg text-xs md:text-sm font-medium hover:opacity-90 transition">
-            <i class="fa-solid fa-lock mr-1"></i> Admin Login
-        </button>
-    `;
-    renderFeedbacks(); // Re-render to hide trash buttons on feedbacks
-    toggleAdminDrawer();
-    showAlert('Admin logged out.');
-}
-
-function addNewProduct() {
-    const category = document.getElementById('new-cat').value || "Ilocos Empanada";
-    const name = document.getElementById('new-name').value;
-    const price = parseFloat(document.getElementById('new-price').value);
-    const description = document.getElementById('new-desc').value;
-    const status = document.getElementById('new-status').value;
-    const fileInput = document.getElementById('new-file');
-
-    if (!name || isNaN(price)) return alert('Please enter item Name and Price!');
-
-    const newId = products.length > 0 ? Math.max(...products.map(p => p.id || 0)) + 1 : 1;
-
-    if (fileInput.files && fileInput.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            products.push({ id: newId, category, name, price, status, description, image: e.target.result });
-            saveAndRefresh('New product added!');
-        };
-        reader.readAsDataURL(fileInput.files[0]);
-    } else {
-        const defaultImg = "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=500&q=80";
-        products.push({ id: newId, category, name, price, status, description, image: defaultImg });
-        saveAndRefresh('New product added!');
-    }
-}
-
-function saveAdminChanges() {
-    let promises = [];
-
-    products.forEach((item, index) => {
-        item.status = document.getElementById(`status-${index}`).value;
-        item.name = document.getElementById(`name-${index}`).value;
-        item.price = parseFloat(document.getElementById(`price-${index}`).value);
-        item.description = document.getElementById(`desc-${index}`).value;
-
-        const fileInput = document.getElementById(`file-${index}`);
-        if (fileInput && fileInput.files && fileInput.files[0]) {
-            let p = new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    item.image = e.target.result;
-                    resolve();
-                };
-                reader.readAsDataURL(fileInput.files[0]);
-            });
-            promises.push(p);
-        }
-    });
-
-    Promise.all(promises).then(() => {
-        saveAndRefresh('All menu changes saved successfully!');
-    });
-}
-
-function saveAndRefresh(msg) {
-    localStorage.setItem('farinas_products', JSON.stringify(products));
-    renderProducts();
-    showAlert(msg);
-}
-
-function deleteProduct(index) {
-    if (confirm('Are you sure you want to delete this product?')) {
-        products.splice(index, 1);
-        saveAndRefresh('Product deleted!');
-    }
-}
-
-function toggleLoginModal() { document.getElementById('loginModal').classList.toggle('hidden'); }
-function toggleAdminDrawer() { document.getElementById('adminDrawer').classList.toggle('translate-x-full'); }
-function toggleBag() { document.getElementById('bagDrawer').classList.toggle('translate-x-full'); }
-
-function showAlert(msg) {
-    const alertBox = document.getElementById('alertBox');
-    document.getElementById('alertMsg').innerText = msg;
-    alertBox.classList.remove('hidden');
-}
-
-function filterStatus(status) {
-    document.querySelectorAll('.status-btn').forEach(btn => btn.classList.remove('bg-gray-800', 'text-white'));
-    event.target.classList.add('bg-gray-800', 'text-white');
-
-    document.querySelectorAll('.product-card').forEach(card => {
-        if (status === 'ALL' || card.dataset.status === status) {
-            card.classList.remove('hidden');
-        } else {
-            card.classList.add('hidden');
-        }
-    });
-}
-
-function filterMenu() {
-    const query = document.getElementById('searchInput').value.toLowerCase();
-    document.querySelectorAll('.product-card').forEach(card => {
-        if (card.dataset.name.includes(query)) {
-            card.classList.remove('hidden');
-        } else {
-            card.classList.add('hidden');
-        }
-    });
-}
-
-function addToBag(name, price) {
-    bag.push({ name, price });
-    localStorage.setItem('farinas_cart', JSON.stringify(bag));
-    updateBagUI();
-    toggleBag();
-}
-
-function removeFromBag(index) {
-    bag.splice(index, 1);
-    localStorage.setItem('farinas_cart', JSON.stringify(bag));
-    updateBagUI();
-}
-
-function updateBagUI() {
-    const container = document.getElementById('bagItems');
-    const totalEl = document.getElementById('bagTotal');
-    const countEl = document.getElementById('bag-count');
-
-    if(!container || !totalEl || !countEl) return;
-
-    countEl.innerText = bag.length;
-
-    if (bag.length === 0) {
-        container.innerHTML = `<p class="text-xs text-gray-400 text-center py-8">Your bag is empty.</p>`;
-        totalEl.innerText = '₱0';
-        return;
-    }
-
-    let total = 0;
-    container.innerHTML = bag.map((item, i) => {
-        total += item.price;
-        return `
-            <div class="flex justify-between items-center text-xs bg-gray-50 p-2.5 rounded border border-gray-200">
-                <div>
-                    <p class="font-bold text-gray-800">${item.name}</p>
-                    <p class="text-brand-orange font-semibold">₱${item.price}</p>
-                </div>
-                <button onclick="removeFromBag(${i})" class="text-red-500 hover:text-red-700 font-bold text-sm">&times;</button>
-            </div>
-        `;
-    }).join('');
-
-    totalEl.innerText = `₱${total}`;
-}
-
-window.onload = renderProducts;
-
+ 
