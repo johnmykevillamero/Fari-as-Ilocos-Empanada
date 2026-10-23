@@ -1,0 +1,13 @@
+.brand-orange {
+    background-color: #ea580c;
+}
+.brand-green {
+    background-color: #16a34a;
+}
+.text-brand-orange {
+    color: #ea580c;
+}
+.status-btn.active {
+    background-color: #1f2937;
+    color: #ffffff;
+}
