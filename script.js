@@ -1,12 +1,15 @@
-let adminAccount = JSON.parse(localStorage.getItem('farinas_auth')) || { user: 'admin', pass: 'farinas123' };
+// Hardcoded Admin Account
+let adminAccount = { user: 'admin', pass: 'farinas123' };
 
-let webDetails = JSON.parse(localStorage.getItem('farinas_web_details')) || {
+// Hardcoded Web Profile Details
+let webDetails = {
     title: "Fariñas Ilocos Empanada",
     sub: "San Mateo Branch",
     pfp: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=100&q=80"
 };
 
-const defaultProducts = [
+// HARDCODED MENU DATABASE (Naka-save na direkta sa code)
+let products = [
     { id: 1, category: "Ilocos Empanada", name: "Regular Empanada", price: 65, status: "AVAILABLE", description: "1 Egg, Vegetables", image: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=500&q=80" },
     { id: 2, category: "Ilocos Empanada", name: "Special Eggless Empanada", price: 80, status: "AVAILABLE", description: "1 Longganisa, Vegetables", image: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=500&q=80" },
     { id: 3, category: "Ilocos Empanada", name: "Special Empanada", price: 95, status: "AVAILABLE", description: "1 Egg, 1 Longganisa, Vegetables", image: "https://images.unsplash.com/photo-1541544741938-0af808871cc0?w=500&q=80" },
@@ -36,9 +39,8 @@ const defaultProducts = [
     { id: 21, category: "Drinks", name: "Iced Tea 350ml", price: 40, status: "AVAILABLE", description: "Refreshing House Blend Iced Tea", image: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=500&q=80" }
 ];
 
-let products = JSON.parse(localStorage.getItem('farinas_products')) || defaultProducts;
-let bag = JSON.parse(localStorage.getItem('farinas_cart')) || [];
-let feedbacks = JSON.parse(localStorage.getItem('farinas_feedbacks')) || [];
+let bag = [];
+let feedbacks = [];
 let isAdminLoggedIn = false;
 
 function applyWebDetails() {
@@ -46,9 +48,6 @@ function applyWebDetails() {
     document.getElementById('webSub').innerHTML = `<i class="fa-solid fa-location-dot text-red-500"></i> ${webDetails.sub}`;
     document.getElementById('webPfp').src = webDetails.pfp;
     document.getElementById('footerTitle').innerText = webDetails.title + " - " + webDetails.sub;
-    
-    document.getElementById('editWebTitle').value = webDetails.title;
-    document.getElementById('editWebSub').value = webDetails.sub;
 }
 
 function renderProducts() {
@@ -132,15 +131,6 @@ function scrollToCategory(cat) {
     if (el) el.scrollIntoView({ behavior: 'smooth' });
 }
 
-function resetToFullMenu() {
-    if(confirm('Are you sure you want to reset the menu to default categories?')) {
-        products = defaultProducts;
-        localStorage.setItem('farinas_products', JSON.stringify(products));
-        renderProducts();
-        showAlert('Menu reset successfully!');
-    }
-}
-
 function toggleAnonymous() {
     const isAnon = document.getElementById('isAnonymous').checked;
     const nameInput = document.getElementById('feedbackName');
@@ -175,7 +165,6 @@ function submitFeedback(e) {
     }
 
     feedbacks.unshift({ name, comment, date: new Date().toLocaleDateString() });
-    localStorage.setItem('farinas_feedbacks', JSON.stringify(feedbacks));
     
     document.getElementById('feedbackText').value = "";
     document.getElementById('feedbackName').value = "";
@@ -184,7 +173,7 @@ function submitFeedback(e) {
     document.getElementById('charCount').innerText = "0";
 
     renderFeedbacks();
-    showAlert('Thank you for your feedback!');
+    alert('Thank you for your feedback!');
 }
 
 function renderFeedbacks() {
@@ -192,7 +181,7 @@ function renderFeedbacks() {
     if (!list) return;
 
     if (feedbacks.length === 0) {
-        list.innerHTML = `<p class="text-xs text-gray-400 text-center py-2">No reviews yet. Be the first to comment!</p>`;
+        list.innerHTML = `<p class="text-xs text-gray-400 text-center py-2">No reviews yet.</p>`;
         return;
     }
 
@@ -204,7 +193,7 @@ function renderFeedbacks() {
             </div>
             <p class="text-gray-600 pl-4 break-words">${fb.comment}</p>
             ${isAdminLoggedIn ? `
-                <button onclick="deleteFeedback(${index})" class="absolute top-2 right-2 text-red-500 hover:text-red-700 text-xs font-bold p-1 bg-red-50 rounded border border-red-200" title="Delete Feedback">
+                <button onclick="deleteFeedback(${index})" class="absolute top-2 right-2 text-red-500 hover:text-red-700 text-xs font-bold p-1 bg-red-50 rounded border" title="Delete Feedback">
                     <i class="fa-solid fa-trash"></i>
                 </button>
             ` : ''}
@@ -213,11 +202,9 @@ function renderFeedbacks() {
 }
 
 function deleteFeedback(index) {
-    if (confirm('Admin: Are you sure you want to delete this customer feedback?')) {
+    if (confirm('Admin: Delete this feedback?')) {
         feedbacks.splice(index, 1);
-        localStorage.setItem('farinas_feedbacks', JSON.stringify(feedbacks));
         renderFeedbacks();
-        showAlert('Feedback deleted by Admin!');
     }
 }
 
@@ -258,7 +245,6 @@ function processCheckout(e) {
         <p class="border-t pt-1 font-bold"><b>Order Items:</b></p>
         <pre class="font-mono text-[11px] whitespace-pre-wrap">${itemsText}</pre>
         <p class="border-t pt-1 font-bold text-brand-orange text-sm">TOTAL: ₱${total}</p>
-        <p class="text-[10px] text-center text-gray-400 pt-2">Thank you for ordering!</p>
     `;
 
     document.getElementById('receiptContentBox').innerHTML = receiptHTML;
@@ -268,46 +254,23 @@ function processCheckout(e) {
 function closeReceiptModal() {
     document.getElementById('receiptModal').classList.add('hidden');
     bag = [];
-    localStorage.removeItem('farinas_cart');
     updateBagUI();
 }
 
 function copyReceiptText() {
     const boxText = document.getElementById('receiptContentBox').innerText;
     navigator.clipboard.writeText(boxText);
-    alert('Receipt copied to clipboard! You can now paste or screenshot it.');
+    alert('Receipt copied to clipboard!');
 }
 
 function renderAdminDrawer() {
     const list = document.getElementById('adminItemsList');
     if (!list) return;
 
-    let html = `
-        <div class="p-3 bg-orange-50 border border-orange-200 rounded-lg space-y-2 mb-4">
-            <h4 class="text-xs font-bold text-brand-orange uppercase"><i class="fa-solid fa-circle-plus mr-1"></i> Add New Product</h4>
-            <input type="text" id="new-cat" placeholder="Category (e.g. Ilocos Rice Meals)" class="w-full text-xs px-2 py-1 border rounded">
-            <input type="text" id="new-name" placeholder="Item Name" class="w-full text-xs px-2 py-1 border rounded">
-            <input type="number" id="new-price" placeholder="Price (₱)" class="w-full text-xs px-2 py-1 border rounded">
-            <input type="text" id="new-desc" placeholder="Description" class="w-full text-xs px-2 py-1 border rounded">
-            <label class="block text-[10px] font-bold text-gray-600">Product Image (Phone Gallery):</label>
-            <input type="file" id="new-file" accept="image/*" class="w-full text-xs p-1 bg-white border rounded">
-            <select id="new-status" class="w-full text-xs font-bold px-2 py-1 border rounded">
-                <option value="AVAILABLE">AVAILABLE</option>
-                <option value="COOKING">COOKING</option>
-                <option value="SOLD_OUT">SOLD OUT</option>
-            </select>
-            <button onclick="addNewProduct()" class="w-full bg-blue-600 text-white py-1.5 rounded text-xs font-bold">+ Add Item</button>
-        </div>
-        <h4 class="text-xs font-bold text-gray-700 uppercase mb-2">Manage Products</h4>
-    `;
-
-    html += products.map((item, index) => `
+    list.innerHTML = products.map((item, index) => `
         <div class="p-3 bg-gray-50 border border-gray-200 rounded-lg space-y-2 relative">
-            <button onclick="deleteProduct(${index})" class="absolute top-2 right-2 text-red-500 hover:text-red-700 text-xs font-bold px-1.5 py-0.5 bg-red-50 rounded border">
-                <i class="fa-solid fa-trash"></i>
-            </button>
-            <span class="text-[10px] font-bold text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded">${item.category || 'General'}</span>
-            <div class="flex justify-between items-center pr-8">
+            <span class="text-[10px] font-bold text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded">${item.category}</span>
+            <div class="flex justify-between items-center">
                 <select id="status-${index}" class="text-xs font-bold px-1.5 py-0.5 rounded border">
                     <option value="AVAILABLE" ${item.status === 'AVAILABLE' ? 'selected' : ''}>AVAILABLE</option>
                     <option value="COOKING" ${item.status === 'COOKING' ? 'selected' : ''}>COOKING</option>
@@ -316,24 +279,117 @@ function renderAdminDrawer() {
             </div>
             <input type="text" id="name-${index}" value="${item.name}" class="w-full text-xs font-bold px-2 py-1 border rounded">
             <input type="number" id="price-${index}" value="${item.price}" class="w-full text-xs px-2 py-1 border rounded">
-            <input type="text" id="desc-${index}" value="${item.description}" class="w-full text-xs font-bold px-2 py-1 border rounded text-gray-600">
-            <label class="block text-[10px] font-bold text-gray-500">Change Image (Gallery):</label>
-            <input type="file" id="file-${index}" accept="image/*" class="w-full text-xs p-1 bg-white border rounded">
         </div>
     `).join('');
-
-    list.innerHTML = html;
 }
 
-function saveWebDetails() {
-    webDetails.title = document.getElementById('editWebTitle').value;
-    webDetails.sub = document.getElementById('editWebSub').value;
-    
-    const pfpFile = document.getElementById('editWebPfpFile');
-    if (pfpFile && pfpFile.files && pfpFile.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            webDetails.pfp = e.target.result;
-            localStorage.setItem('farinas_web_details', JSON.stringify(webDetails));
-            renderProducts();
- 
+function saveAdminChanges() {
+    products.forEach((item, index) => {
+        item.status = document.getElementById(`status-${index}`).value;
+        item.name = document.getElementById(`name-${index}`).value;
+        item.price = parseFloat(document.getElementById(`price-${index}`).value);
+    });
+    renderProducts();
+    toggleAdminDrawer();
+    alert('Changes applied in code/memory!');
+}
+
+function handleLogin(e) {
+    e.preventDefault();
+    const u = document.getElementById('username').value;
+    const p = document.getElementById('password').value;
+
+    if (u === adminAccount.user && p === adminAccount.pass) {
+        isAdminLoggedIn = true;
+        toggleLoginModal();
+        document.getElementById('authNav').innerHTML = `
+            <button onclick="toggleAdminDrawer()" class="brand-green text-white px-2.5 py-1.5 rounded-lg text-xs font-medium mr-1">Admin Panel</button>
+            <button onclick="logoutAdmin()" class="bg-red-600 text-white px-2.5 py-1.5 rounded-lg text-xs font-medium"><i class="fa-solid fa-right-from-bracket"></i></button>
+        `;
+        renderFeedbacks();
+        toggleAdminDrawer();
+    } else {
+        document.getElementById('loginError').innerText = 'Invalid credentials!';
+        document.getElementById('loginError').classList.remove('hidden');
+    }
+}
+
+function logoutAdmin() {
+    isAdminLoggedIn = false;
+    document.getElementById('authNav').innerHTML = `<button onclick="toggleLoginModal()" class="brand-orange text-white px-3 py-1.5 rounded-lg text-xs font-medium">Admin Login</button>`;
+    renderFeedbacks();
+    toggleAdminDrawer();
+}
+
+function toggleLoginModal() { document.getElementById('loginModal').classList.toggle('hidden'); }
+function toggleAdminDrawer() { document.getElementById('adminDrawer').classList.toggle('translate-x-full'); }
+function toggleBag() { document.getElementById('bagDrawer').classList.toggle('translate-x-full'); }
+
+function filterStatus(status) {
+    document.querySelectorAll('.status-btn').forEach(btn => btn.classList.remove('bg-gray-800', 'text-white'));
+    event.target.classList.add('bg-gray-800', 'text-white');
+
+    document.querySelectorAll('.product-card').forEach(card => {
+        if (status === 'ALL' || card.dataset.status === status) {
+            card.classList.remove('hidden');
+        } else {
+            card.classList.add('hidden');
+        }
+    });
+}
+
+function filterMenu() {
+    const query = document.getElementById('searchInput').value.toLowerCase();
+    document.querySelectorAll('.product-card').forEach(card => {
+        if (card.dataset.name.includes(query)) {
+            card.classList.remove('hidden');
+        } else {
+            card.classList.add('hidden');
+        }
+    });
+}
+
+function addToBag(name, price) {
+    bag.push({ name, price });
+    updateBagUI();
+    toggleBag();
+}
+
+function removeFromBag(index) {
+    bag.splice(index, 1);
+    updateBagUI();
+}
+
+function updateBagUI() {
+    const container = document.getElementById('bagItems');
+    const totalEl = document.getElementById('bagTotal');
+    const countEl = document.getElementById('bag-count');
+
+    if(!container || !totalEl || !countEl) return;
+    countEl.innerText = bag.length;
+
+    if (bag.length === 0) {
+        container.innerHTML = `<p class="text-xs text-gray-400 text-center py-8">Your bag is empty.</p>`;
+        totalEl.innerText = '₱0';
+        return;
+    }
+
+    let total = 0;
+    container.innerHTML = bag.map((item, i) => {
+        total += item.price;
+        return `
+            <div class="flex justify-between items-center text-xs bg-gray-50 p-2.5 rounded border">
+                <div>
+                    <p class="font-bold text-gray-800">${item.name}</p>
+                    <p class="text-brand-orange font-semibold">₱${item.price}</p>
+                </div>
+                <button onclick="removeFromBag(${i})" class="text-red-500 font-bold text-sm">&times;</button>
+            </div>
+        `;
+    }).join('');
+
+    totalEl.innerText = `₱${total}`;
+}
+
+window.onload = renderProducts;
+
