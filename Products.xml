@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu>
+    <item>
+        <id>1</id>
+        <category>Ilocos Empanada</category>
+        <name>Regular Empanada</name>
+        <price>65</price>
+        <status>AVAILABLE</status>
+        <description>1 Egg, Vegetables</description>
+    </item>
+    <item>
+        <id>2</id>
+        <category>Ilocos Empanada</category>
+        <name>Special Empanada</name>
+        <price>95</price>
+        <status>AVAILABLE</status>
+        <description>1 Egg, 1 Longganisa, Vegetables</description>
+    </item>
+    <item>
+        <id>3</id>
+        <category>Ilocos Rice Meals</category>
+        <name>Bagnet Rice Meal</name>
+        <price>180</price>
+        <status>AVAILABLE</status>
+        <description>Crispy Bagnet served with Rice & Egg</description>
+    </item>
+    <item>
+        <id>4</id>
+        <category>Drinks</category>
+        <name>Iced Tea 350ml</name>
+        <price>40</price>
+        <status>AVAILABLE</status>
+        <description>Refreshing House Blend Iced Tea</description>
+    </item>
+</menu>
