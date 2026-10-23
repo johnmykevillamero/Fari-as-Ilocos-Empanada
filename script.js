@@ -1,10 +1,13 @@
 let products = [];
 let bag = [];
+let feedbacks = [];
+let isAdminLoggedIn = false;
+let adminAccount = { user: 'admin', pass: 'farinas123' };
 
-// 1. KUNIN ANG DATA MULA SA XML FILE
+// LOAD XML MENU
 function loadXMLMenu() {
     fetch('products.xml?t=' + new Date().getTime())
-        .then(response => response.text())
+        .then(res => res.text())
         .then(str => (new window.DOMParser()).parseFromString(str, "text/xml"))
         .then(data => {
             const items = data.getElementsByTagName("item");
@@ -23,10 +26,31 @@ function loadXMLMenu() {
             renderMenu();
             renderAdminPanel();
         })
-        .catch(err => console.error("Error loading XML:", err));
+        .catch(err => console.error("Error loading products XML:", err));
 }
 
-// 2. I-DISPLAY ANG MENU SA HTML
+// LOAD XML FEEDBACKS
+function loadXMLFeedbacks() {
+    fetch('feedbacks.xml?t=' + new Date().getTime())
+        .then(res => res.text())
+        .then(str => (new window.DOMParser()).parseFromString(str, "text/xml"))
+        .then(data => {
+            const items = data.getElementsByTagName("feedback");
+            feedbacks = [];
+            for (let i = 0; i < items.length; i++) {
+                feedbacks.unshift({
+                    id: items[i].getElementsByTagName("id")[0].textContent,
+                    name: items[i].getElementsByTagName("name")[0].textContent,
+                    comment: items[i].getElementsByTagName("comment")[0].textContent,
+                    date: items[i].getElementsByTagName("date")[0].textContent
+                });
+            }
+            renderFeedbacks();
+        })
+        .catch(err => console.error("Error loading feedbacks XML:", err));
+}
+
+// RENDER MENU
 function renderMenu() {
     const container = document.getElementById('menuGrid');
     if (!container) return;
@@ -68,12 +92,48 @@ function renderMenu() {
     }).join('');
 }
 
-// 3. I-DISPLAY ANG ADMIN CONTROL PANEL
+// ADMIN LOGIN LOGIC
+function handleLogin(e) {
+    e.preventDefault();
+    const u = document.getElementById('username').value;
+    const p = document.getElementById('password').value;
+
+    if (u === adminAccount.user && p === adminAccount.pass) {
+        isAdminLoggedIn = true;
+        toggleLoginModal();
+        document.getElementById('authNav').innerHTML = `
+            <button onclick="toggleAdminDrawer()" class="brand-green text-white px-2.5 py-1.5 rounded-lg text-xs font-semibold mr-1">
+                <i class="fa-solid fa-sliders"></i> Admin Panel
+            </button>
+            <button onclick="logoutAdmin()" class="bg-red-600 text-white px-2.5 py-1.5 rounded-lg text-xs font-semibold">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </button>
+        `;
+        renderFeedbacks();
+        toggleAdminDrawer();
+    } else {
+        document.getElementById('loginError').innerText = 'Invalid username or password!';
+        document.getElementById('loginError').classList.remove('hidden');
+    }
+}
+
+function logoutAdmin() {
+    isAdminLoggedIn = false;
+    document.getElementById('authNav').innerHTML = `
+        <button onclick="toggleLoginModal()" class="brand-orange text-white px-3 py-1.5 rounded-lg text-xs font-semibold">
+            <i class="fa-solid fa-lock mr-1"></i> Admin Login
+        </button>
+    `;
+    renderFeedbacks();
+    toggleAdminDrawer();
+}
+
+// ADMIN MENU EDIT
 function renderAdminPanel() {
     const list = document.getElementById('adminItemsList');
     if (!list) return;
 
-    list.innerHTML = products.map((item, index) => `
+    list.innerHTML = products.map(item => `
         <div class="p-3 bg-gray-50 border border-gray-200 rounded-lg space-y-2">
             <div class="flex justify-between items-center">
                 <span class="text-xs font-bold text-gray-800">${item.name}</span>
@@ -90,7 +150,6 @@ function renderAdminPanel() {
     `).join('');
 }
 
-// 4. I-SAVE ANG CHANGES SA XML VIA PHP
 function saveAdminChangesToXML() {
     const updatedItems = products.map(item => ({
         id: item.id,
@@ -101,23 +160,111 @@ function saveAdminChangesToXML() {
     fetch('update.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: updatedItems })
+        body: JSON.stringify({ action: 'update_menu', items: updatedItems })
     })
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            alert("Success: Changes saved to XML!");
-            loadXMLMenu(); // Reload the updated XML
+            alert("Menu changes saved to XML!");
+            loadXMLMenu();
             toggleAdminDrawer();
         } else {
             alert("Error: " + data.message);
         }
-    })
-    .catch(err => alert("Server error updating XML: " + err));
+    });
 }
 
-// SHOPPING CART FUNCTIONS
+// FEEDBACK SYSTEM
+function toggleAnonymous() {
+    const isAnon = document.getElementById('isAnonymous').checked;
+    const nameInput = document.getElementById('feedbackName');
+    if (isAnon) {
+        nameInput.value = "";
+        nameInput.disabled = true;
+        nameInput.placeholder = "Posting as Anonymous";
+    } else {
+        nameInput.disabled = false;
+        nameInput.placeholder = "Your Name";
+    }
+}
+
+function updateCharCount() {
+    const text = document.getElementById('feedbackText').value;
+    document.getElementById('charCount').innerText = text.length;
+}
+
+function submitFeedback(e) {
+    e.preventDefault();
+    const isAnon = document.getElementById('isAnonymous').checked;
+    let name = document.getElementById('feedbackName').value.trim();
+    const comment = document.getElementById('feedbackText').value.trim();
+
+    if (isAnon || !name) name = "Anonymous Customer";
+
+    fetch('update.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'add_feedback', name, comment })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('Thank you for your feedback!');
+            document.getElementById('feedbackText').value = "";
+            document.getElementById('feedbackName').value = "";
+            document.getElementById('isAnonymous').checked = false;
+            document.getElementById('feedbackName').disabled = false;
+            document.getElementById('charCount').innerText = "0";
+            loadXMLFeedbacks();
+        }
+    });
+}
+
+function renderFeedbacks() {
+    const list = document.getElementById('feedbackList');
+    if (!list) return;
+
+    if (feedbacks.length === 0) {
+        list.innerHTML = `<p class="text-xs text-gray-400 text-center py-2">No reviews yet.</p>`;
+        return;
+    }
+
+    list.innerHTML = feedbacks.map(fb => `
+        <div class="bg-gray-50 border border-gray-200 p-3 rounded-lg text-xs space-y-1 relative">
+            <div class="flex justify-between items-center font-bold text-gray-700 pr-6">
+                <span><i class="fa-solid fa-user-circle text-orange-500 mr-1"></i> ${fb.name}</span>
+                <span class="text-[10px] text-gray-400">${fb.date}</span>
+            </div>
+            <p class="text-gray-600 pl-4 break-words">${fb.comment}</p>
+            ${isAdminLoggedIn ? `
+                <button onclick="deleteFeedback('${fb.id}')" class="absolute top-2 right-2 text-red-500 hover:text-red-700 text-xs font-bold p-1 bg-red-50 rounded border" title="Delete Feedback">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            ` : ''}
+        </div>
+    `).join('');
+}
+
+function deleteFeedback(id) {
+    if (confirm('Admin: Are you sure you want to delete this customer feedback?')) {
+        fetch('update.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'delete_feedback', id })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert('Feedback deleted from XML!');
+                loadXMLFeedbacks();
+            }
+        });
+    }
+}
+
+// CART & MODAL CONTROLS
 function toggleBag() { document.getElementById('bagDrawer').classList.toggle('translate-x-full'); }
+function toggleLoginModal() { document.getElementById('loginModal').classList.toggle('hidden'); }
 function toggleAdminDrawer() { document.getElementById('adminDrawer').classList.toggle('translate-x-full'); }
 
 function addToBag(name, price) {
@@ -161,7 +308,6 @@ function updateBagUI() {
     totalEl.innerText = `₱${total}`;
 }
 
-// SEARCH & FILTERS
 function filterStatus(status) {
     document.querySelectorAll('.status-btn').forEach(btn => btn.classList.remove('bg-gray-800', 'text-white'));
     event.target.classList.add('bg-gray-800', 'text-white');
@@ -186,5 +332,7 @@ function filterMenu() {
     });
 }
 
-// INITIAL LOAD ON PAGE OPEN
-window.onload = loadXMLMenu;
+window.onload = function() {
+    loadXMLMenu();
+    loadXMLFeedbacks();
+};
